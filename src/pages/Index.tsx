@@ -1,9 +1,10 @@
 import { useState, useCallback } from "react";
 import {
   Sparkles, Zap, Globe, Calendar, Download, RefreshCw,
-  ChevronDown, BarChart3, Hash, Megaphone, CheckCircle2,
-  ArrowRight, Star, TrendingUp, Users, Clock
+  BarChart3, Hash, Megaphone, CheckCircle2,
+  ArrowRight, Star, TrendingUp, Users, Clock, Video
 } from "lucide-react";
+import { VideoGenerator } from "@/components/VideoGenerator";
 import { cn } from "@/lib/utils";
 import {
   PLATFORMS, TONES, CONTENT_TYPES,
@@ -27,7 +28,7 @@ const QUICK_TOPICS = [
   "Personal branding",
 ];
 
-type Tab = "generate" | "calendar" | "bulk";
+type Tab = "generate" | "calendar" | "bulk" | "video";
 
 export default function Index() {
   // Generator state
@@ -126,6 +127,7 @@ export default function Index() {
 
   const TABS = [
     { id: "generate" as Tab, label: "Generate", icon: Sparkles },
+    { id: "video" as Tab, label: "Video AI", icon: Video },
     { id: "bulk" as Tab, label: "Bulk Calendar", icon: Calendar },
     { id: "calendar" as Tab, label: `Scheduled (${calendarEntries.length})`, icon: TrendingUp },
   ];
@@ -584,6 +586,9 @@ export default function Index() {
             </div>
           </div>
         )}
+
+        {/* ═══════════════════════════════════════ VIDEO TAB ═══════════════════════════════════════ */}
+        {activeTab === "video" && <VideoGenerator />}
 
         {/* ═══════════════════════════════════════ CALENDAR TAB ═══════════════════════════════════════ */}
         {activeTab === "calendar" && (
