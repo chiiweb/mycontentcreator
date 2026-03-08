@@ -1,9 +1,10 @@
 import { useState, useCallback } from "react";
 import {
   Sparkles, Zap, Globe, Calendar, Download, RefreshCw,
-  ChevronDown, BarChart3, Hash, Megaphone, CheckCircle2,
-  ArrowRight, Star, TrendingUp, Users, Clock
+  BarChart3, Hash, Megaphone, CheckCircle2,
+  ArrowRight, Star, TrendingUp, Users, Clock, Video
 } from "lucide-react";
+import { VideoGenerator } from "@/components/VideoGenerator";
 import { cn } from "@/lib/utils";
 import {
   PLATFORMS, TONES, CONTENT_TYPES,
