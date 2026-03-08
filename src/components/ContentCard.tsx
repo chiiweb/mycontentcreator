@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Check, Download, Calendar, Clock, Share2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Copy, Check, Calendar, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PLATFORMS, TONES, type GeneratedContent } from "@/data/contentTemplates";
 import { PlatformBadge } from "./PlatformBadge";
@@ -20,63 +20,52 @@ export function ContentCard({ content, onAddToCalendar, animationDelay = 0 }: Co
   const tone = TONES[content.tone];
   const isOverLimit = content.characterCount > platform.maxChars;
 
+  const borderGradientMap: Record<string, string> = {
+    instagram: "linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
+    twitter: "linear-gradient(135deg, #1d9bf0, #0f6cbd)",
+    linkedin: "linear-gradient(135deg, #0077b5, #005582)",
+    facebook: "linear-gradient(135deg, #1877f2, #0c5dcf)",
+    tiktok: "linear-gradient(135deg, #fe2c55, #25f4ee)",
+    youtube: "linear-gradient(135deg, #ff0000, #cc0000)",
+  };
+
   const handleCopy = async (text: string, section: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedSection(section);
-      setCopied(true);
-      setTimeout(() => { setCopied(false); setCopiedSection(null); }, 2000);
     } catch {
-      // Fallback
       const textarea = document.createElement("textarea");
       textarea.value = text;
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand("copy");
       document.body.removeChild(textarea);
-      setCopiedSection(section);
-      setCopied(true);
-      setTimeout(() => { setCopied(false); setCopiedSection(null); }, 2000);
     }
+    setCopiedSection(section);
+    setCopied(true);
+    setTimeout(() => { setCopied(false); setCopiedSection(null); }, 2000);
   };
 
   const handleCopyAll = () => {
-    const fullContent = `${content.caption}\n\n${content.hashtags.join(" ")}`;
-    handleCopy(fullContent, "all");
-  };
-
-  const gradients: Record<string, string> = {
-    instagram: "from-orange-500/10 via-pink-500/10 to-purple-500/10",
-    twitter: "from-sky-500/10 to-blue-500/10",
-    linkedin: "from-blue-600/10 to-blue-800/10",
-    facebook: "from-blue-500/10 to-indigo-500/10",
-    tiktok: "from-pink-500/10 via-red-500/10 to-cyan-500/10",
-    youtube: "from-red-500/10 to-red-700/10",
-  };
-
-  const borderGradients: Record<string, string> = {
-    instagram: "from-orange-400 via-pink-500 to-purple-600",
-    twitter: "from-sky-400 to-blue-500",
-    linkedin: "from-blue-500 to-blue-700",
-    facebook: "from-blue-400 to-indigo-500",
-    tiktok: "from-pink-500 to-cyan-400",
-    youtube: "from-red-400 to-red-600",
+    handleCopy(`${content.caption}\n\n${content.hashtags.join(" ")}`, "all");
   };
 
   return (
     <div
-      className="relative rounded-2xl overflow-hidden card-glow animate-fade-in"
+      className="relative rounded-2xl card-glow animate-fade-in"
       style={{ animationDelay: `${animationDelay}ms` }}
     >
       {/* Gradient border */}
-      <div className={cn("absolute inset-0 rounded-2xl p-[1px] bg-gradient-to-br", borderGradients[content.platform])}>
-        <div className={cn("h-full w-full rounded-2xl bg-gradient-to-br", gradients[content.platform], "bg-card")} />
+      <div
+        className="absolute inset-0 rounded-2xl p-[1px]"
+        style={{ background: borderGradientMap[content.platform] }}
+      >
+        <div className="h-full w-full rounded-2xl bg-card" />
       </div>
 
       <div className="relative z-10 p-5">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <PlatformBadge platform={content.platform} size="sm" />
             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary text-muted-foreground text-xs font-medium">
               {tone.icon} {tone.name}
@@ -87,7 +76,7 @@ export function ContentCard({ content, onAddToCalendar, animationDelay = 0 }: Co
           </div>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"
+            className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground ml-2"
           >
             {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
@@ -141,31 +130,24 @@ export function ContentCard({ content, onAddToCalendar, animationDelay = 0 }: Co
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {content.hashtags.map((tag, i) => (
-                  <span
+                  <button
                     key={i}
-                    className="px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all hover:scale-105"
-                    style={{
-                      background: `${platform.color}20`,
-                      color: platform.color,
-                      border: `1px solid ${platform.color}40`,
-                    }}
+                    className="px-2.5 py-1 rounded-full text-xs font-medium transition-all hover:scale-105 bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20"
                     onClick={() => handleCopy(tag, `tag_${i}`)}
                   >
-                    {tag}
-                  </span>
+                    {copiedSection === `tag_${i}` ? "✓ " : ""}{tag}
+                  </button>
                 ))}
               </div>
             </div>
 
             {/* CTA */}
             <div className="mb-4 p-3 rounded-xl bg-primary/5 border border-primary/20">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Call to Action</span>
-              </div>
+              <span className="text-xs font-semibold text-primary uppercase tracking-wider block mb-1">Call to Action</span>
               <p className="text-sm text-foreground/80">{content.callToAction}</p>
             </div>
 
-            {/* Tips */}
+            {/* Tips toggle */}
             <button
               onClick={() => setShowTips(!showTips)}
               className="w-full text-left text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5 mb-2"

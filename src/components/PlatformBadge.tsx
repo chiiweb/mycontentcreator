@@ -32,7 +32,7 @@ export function PlatformBadge({ platform, size = "md", selected, onClick }: Plat
           : "opacity-70 hover:opacity-100 hover:scale-105",
         onClick ? "cursor-pointer" : "cursor-default"
       )}
-      style={selected ? { ringColor: p.color } : {}}
+      style={selected ? { outlineColor: p.color } : {}}
     >
       <span className={cn("absolute inset-0 bg-gradient-to-br", gradients[platform], !selected && "opacity-70")} />
       <span className="relative z-10 flex items-center gap-1.5 text-white font-bold">
