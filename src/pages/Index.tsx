@@ -587,6 +587,9 @@ export default function Index() {
           </div>
         )}
 
+        {/* ═══════════════════════════════════════ VIDEO TAB ═══════════════════════════════════════ */}
+        {activeTab === "video" && <VideoGenerator />}
+
         {/* ═══════════════════════════════════════ CALENDAR TAB ═══════════════════════════════════════ */}
         {activeTab === "calendar" && (
           <ContentCalendar
