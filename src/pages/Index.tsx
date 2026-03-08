@@ -28,7 +28,7 @@ const QUICK_TOPICS = [
   "Personal branding",
 ];
 
-type Tab = "generate" | "calendar" | "bulk";
+type Tab = "generate" | "calendar" | "bulk" | "video";
 
 export default function Index() {
   // Generator state
