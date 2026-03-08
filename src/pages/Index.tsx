@@ -127,6 +127,7 @@ export default function Index() {
 
   const TABS = [
     { id: "generate" as Tab, label: "Generate", icon: Sparkles },
+    { id: "video" as Tab, label: "Video AI", icon: Video },
     { id: "bulk" as Tab, label: "Bulk Calendar", icon: Calendar },
     { id: "calendar" as Tab, label: `Scheduled (${calendarEntries.length})`, icon: TrendingUp },
   ];
