@@ -23,7 +23,7 @@ import vidTech from "@/assets/vid-tech.mp4";
 import vidFashion from "@/assets/vid-fashion.mp4";
 
 type AspectRatio = "16:9" | "9:16" | "1:1" | "4:3" | "3:4";
-type Duration = 5 | 10;
+type Duration = 5 | 10 | 60 | 300;
 type Resolution = "480p" | "1080p";
 
 interface VideoResult {
@@ -83,10 +83,45 @@ const PLATFORM_VIDEOS: Record<string, string> = {
 const PLATFORM_PRESETS: Record<string, { aspectRatio: AspectRatio; duration: Duration; icon: string; color: string; label: string }> = {
   tiktok:    { aspectRatio: "9:16", duration: 5,  icon: "🎵", color: "from-pink-500 to-cyan-400",    label: "TikTok" },
   instagram: { aspectRatio: "1:1",  duration: 5,  icon: "📸", color: "from-orange-400 to-purple-600", label: "Instagram" },
-  youtube:   { aspectRatio: "16:9", duration: 10, icon: "▶️", color: "from-red-500 to-red-700",       label: "YouTube" },
-  facebook:  { aspectRatio: "16:9", duration: 5,  icon: "👥", color: "from-blue-500 to-blue-700",     label: "Facebook" },
+  youtube:   { aspectRatio: "16:9", duration: 60, icon: "▶️", color: "from-red-500 to-red-700",       label: "YouTube" },
+  facebook:  { aspectRatio: "16:9", duration: 60, icon: "👥", color: "from-blue-500 to-blue-700",     label: "Facebook" },
   twitter:   { aspectRatio: "16:9", duration: 5,  icon: "🐦", color: "from-sky-400 to-blue-600",      label: "X (Twitter)" },
   pinterest: { aspectRatio: "3:4",  duration: 5,  icon: "📌", color: "from-red-400 to-red-600",       label: "Pinterest" },
+};
+
+const DURATION_LABELS: Record<number, string> = {
+  5:   "5s  · Reel / Short",
+  10:  "10s · Story",
+  60:  "1m  · Explainer",
+  300: "5m  · Deep-dive",
+};
+
+// Humanized status messages that cycle while generating
+const GENERATING_MESSAGES: Record<number, string[]> = {
+  5: [
+    "Alright, pulling together your concept...",
+    "Picking the perfect visuals for this...",
+    "Almost there, just adding the finishing touches!",
+  ],
+  10: [
+    "Got it! Working on your 10-second clip...",
+    "Stitching the scenes together now...",
+    "Looking good — almost ready for you!",
+  ],
+  60: [
+    "Nice — a full minute takes a little love, hang tight...",
+    "Building your story scene by scene...",
+    "Colour grading and syncing audio now...",
+    "This one's coming out great — nearly done!",
+  ],
+  300: [
+    "A 5-minute deep-dive — this is going to be awesome!",
+    "Laying out the structure and pacing...",
+    "Rendering each segment, this takes a moment...",
+    "Halfway through — the second half always flies by!",
+    "Adding transitions and polishing the flow...",
+    "Just the final review pass left — almost there!",
+  ],
 };
 
 const VIDEO_STYLE_PROMPTS = [
@@ -102,12 +137,6 @@ const VIDEO_STYLE_PROMPTS = [
   "Fashion editorial high-end slow motion",
 ];
 
-// Simulates a realistic generation progress ticking up
-function useProgressTimer(active: boolean) {
-  const [progress, setProgress] = useState(0);
-  return { progress, setProgress };
-}
-
 export function VideoGenerator() {
   const [prompt, setPrompt] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState("tiktok");
@@ -116,6 +145,7 @@ export function VideoGenerator() {
   const [resolution, setResolution] = useState<Resolution>("1080p");
   const [isGenerating, setIsGenerating] = useState(false);
   const [videos, setVideos] = useState<VideoResult[]>([]);
+  const [statusMsg, setStatusMsg] = useState("");
 
   const handlePlatformSelect = (key: string) => {
     setSelectedPlatform(key);
@@ -142,13 +172,23 @@ export function VideoGenerator() {
 
     setVideos(prev => [newVideo, ...prev]);
 
-    // Tick progress from 0 → 90% while generating
-    const totalMs = duration === 10 ? 4000 : 2800;
+    // Scale fake render time: 5s→2.8s, 10s→4s, 60s→6s, 300s→9s
+    const totalMs = duration === 300 ? 9000 : duration === 60 ? 6000 : duration === 10 ? 4000 : 2800;
     const tickInterval = 80;
     const ticks = totalMs / tickInterval;
     let tick = 0;
 
-    const timer = setInterval(() => {
+    // Rotate humanized status messages
+    const msgs = GENERATING_MESSAGES[duration] ?? GENERATING_MESSAGES[5];
+    let msgIdx = 0;
+    setStatusMsg(msgs[0]);
+    const msgInterval = Math.floor(totalMs / msgs.length);
+    const msgTimer = setInterval(() => {
+      msgIdx = Math.min(msgIdx + 1, msgs.length - 1);
+      setStatusMsg(msgs[msgIdx]);
+    }, msgInterval);
+
+    const progressTimer = setInterval(() => {
       tick++;
       const pct = Math.min(90, Math.round((tick / ticks) * 90));
       setVideos(prev => prev.map(v => v.id === id ? { ...v, progress: pct } : v));
@@ -156,7 +196,9 @@ export function VideoGenerator() {
 
     try {
       await new Promise(res => setTimeout(res, totalMs));
-      clearInterval(timer);
+      clearInterval(progressTimer);
+      clearInterval(msgTimer);
+      setStatusMsg("");
 
       const matched = matchVideoToPrompt(prompt.trim(), selectedPlatform);
 
@@ -168,11 +210,13 @@ export function VideoGenerator() {
         )
       );
     } catch {
-      clearInterval(timer);
+      clearInterval(progressTimer);
+      clearInterval(msgTimer);
+      setStatusMsg("");
       setVideos(prev =>
         prev.map(v =>
           v.id === id
-            ? { ...v, generating: false, error: "Generation failed. Try again.", progress: 0 }
+            ? { ...v, generating: false, error: "Hmm, something went wrong — give it another shot!", progress: 0 }
             : v
         )
       );
@@ -282,18 +326,20 @@ export function VideoGenerator() {
 
           <div>
             <p className="text-xs text-muted-foreground mb-2">Duration</p>
-            <div className="flex gap-2">
-              {([5, 10] as Duration[]).map(d => (
+            <div className="grid grid-cols-2 gap-2">
+              {([5, 10, 60, 300] as Duration[]).map(d => (
                 <button
                   key={d}
                   onClick={() => setDuration(d)}
                   className={cn(
-                    "flex-1 py-2 rounded-xl text-sm font-bold border transition-all",
+                    "py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left leading-tight",
                     duration === d
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-secondary/50 border-transparent text-muted-foreground hover:bg-secondary"
                   )}
-                >{d}s</button>
+                >
+                  {DURATION_LABELS[d]}
+                </button>
               ))}
             </div>
           </div>
@@ -330,9 +376,9 @@ export function VideoGenerator() {
           )}
         >
           {isGenerating ? (
-            <><RefreshCw size={18} className="animate-spin" />Generating video...</>
+            <><RefreshCw size={18} className="animate-spin" />On it — hang tight!</>
           ) : (
-            <><Video size={18} /><Zap size={16} />Generate Video</>
+            <><Video size={18} /><Zap size={16} />Let's Make This Video</>
           )}
         </button>
       </div>
@@ -377,23 +423,28 @@ export function VideoGenerator() {
         {videos.map(video => (
           <div key={video.id} className="rounded-2xl border border-border bg-card overflow-hidden">
             {video.generating ? (
-              <div className="h-64 flex flex-col items-center justify-center gap-5 bg-gradient-to-br from-primary/5 to-accent/5 p-6">
+              <div className="h-72 flex flex-col items-center justify-center gap-5 bg-gradient-to-br from-primary/5 to-accent/5 p-6">
                 <div className="relative">
                   <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center">
                     <Video size={28} className="text-primary" />
                   </div>
                   <div className="absolute inset-0 rounded-2xl border-2 border-primary border-t-transparent animate-spin" />
                 </div>
-                <div className="text-center">
-                  <p className="text-foreground font-bold">Generating your video...</p>
-                  <p className="text-muted-foreground text-xs mt-1 truncate max-w-xs">
-                    "{video.prompt.length > 45 ? video.prompt.slice(0, 45) + "…" : video.prompt}"
+                <div className="text-center max-w-xs">
+                  <p className="text-foreground font-bold text-sm transition-all duration-500">
+                    {statusMsg || "Working on your video…"}
+                  </p>
+                  <p className="text-muted-foreground text-xs mt-1.5 italic opacity-80 truncate">
+                    "{video.prompt.length > 50 ? video.prompt.slice(0, 50) + "…" : video.prompt}"
+                  </p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">
+                    {PLATFORM_PRESETS[video.platform]?.icon} {PLATFORM_PRESETS[video.platform]?.label} · {video.aspectRatio} · {DURATION_LABELS[video.duration]?.split("·")[0].trim()}
                   </p>
                 </div>
                 {/* Animated progress bar */}
-                <div className="w-56 space-y-1.5">
+                <div className="w-60 space-y-1.5">
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Rendering {video.aspectRatio} · {video.duration}s</span>
+                    <span>Rendering…</span>
                     <span className="text-primary font-bold">{video.progress}%</span>
                   </div>
                   <div className="h-2 bg-secondary rounded-full overflow-hidden">
@@ -405,7 +456,7 @@ export function VideoGenerator() {
                 </div>
               </div>
             ) : video.error ? (
-              <div className="h-40 flex items-center justify-center text-destructive text-sm">{video.error}</div>
+              <div className="h-40 flex items-center justify-center gap-2 text-destructive text-sm px-6 text-center">{video.error}</div>
             ) : (
               <>
                 <video
