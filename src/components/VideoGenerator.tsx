@@ -376,9 +376,9 @@ export function VideoGenerator() {
           )}
         >
           {isGenerating ? (
-            <><RefreshCw size={18} className="animate-spin" />Generating video...</>
+            <><RefreshCw size={18} className="animate-spin" />On it — hang tight!</>
           ) : (
-            <><Video size={18} /><Zap size={16} />Generate Video</>
+            <><Video size={18} /><Zap size={16} />Let's Make This Video</>
           )}
         </button>
       </div>
