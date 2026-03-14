@@ -137,12 +137,6 @@ const VIDEO_STYLE_PROMPTS = [
   "Fashion editorial high-end slow motion",
 ];
 
-// Simulates a realistic generation progress ticking up
-function useProgressTimer(active: boolean) {
-  const [progress, setProgress] = useState(0);
-  return { progress, setProgress };
-}
-
 export function VideoGenerator() {
   const [prompt, setPrompt] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState("tiktok");
@@ -151,6 +145,7 @@ export function VideoGenerator() {
   const [resolution, setResolution] = useState<Resolution>("1080p");
   const [isGenerating, setIsGenerating] = useState(false);
   const [videos, setVideos] = useState<VideoResult[]>([]);
+  const [statusMsg, setStatusMsg] = useState("");
 
   const handlePlatformSelect = (key: string) => {
     setSelectedPlatform(key);
@@ -177,13 +172,23 @@ export function VideoGenerator() {
 
     setVideos(prev => [newVideo, ...prev]);
 
-    // Tick progress from 0 → 90% while generating
-    const totalMs = duration === 10 ? 4000 : 2800;
+    // Scale fake render time: 5s→2.8s, 10s→4s, 60s→6s, 300s→9s
+    const totalMs = duration === 300 ? 9000 : duration === 60 ? 6000 : duration === 10 ? 4000 : 2800;
     const tickInterval = 80;
     const ticks = totalMs / tickInterval;
     let tick = 0;
 
-    const timer = setInterval(() => {
+    // Rotate humanized status messages
+    const msgs = GENERATING_MESSAGES[duration] ?? GENERATING_MESSAGES[5];
+    let msgIdx = 0;
+    setStatusMsg(msgs[0]);
+    const msgInterval = Math.floor(totalMs / msgs.length);
+    const msgTimer = setInterval(() => {
+      msgIdx = Math.min(msgIdx + 1, msgs.length - 1);
+      setStatusMsg(msgs[msgIdx]);
+    }, msgInterval);
+
+    const progressTimer = setInterval(() => {
       tick++;
       const pct = Math.min(90, Math.round((tick / ticks) * 90));
       setVideos(prev => prev.map(v => v.id === id ? { ...v, progress: pct } : v));
@@ -191,7 +196,9 @@ export function VideoGenerator() {
 
     try {
       await new Promise(res => setTimeout(res, totalMs));
-      clearInterval(timer);
+      clearInterval(progressTimer);
+      clearInterval(msgTimer);
+      setStatusMsg("");
 
       const matched = matchVideoToPrompt(prompt.trim(), selectedPlatform);
 
@@ -203,11 +210,13 @@ export function VideoGenerator() {
         )
       );
     } catch {
-      clearInterval(timer);
+      clearInterval(progressTimer);
+      clearInterval(msgTimer);
+      setStatusMsg("");
       setVideos(prev =>
         prev.map(v =>
           v.id === id
-            ? { ...v, generating: false, error: "Generation failed. Try again.", progress: 0 }
+            ? { ...v, generating: false, error: "Hmm, something went wrong — give it another shot!", progress: 0 }
             : v
         )
       );
