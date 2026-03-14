@@ -423,23 +423,28 @@ export function VideoGenerator() {
         {videos.map(video => (
           <div key={video.id} className="rounded-2xl border border-border bg-card overflow-hidden">
             {video.generating ? (
-              <div className="h-64 flex flex-col items-center justify-center gap-5 bg-gradient-to-br from-primary/5 to-accent/5 p-6">
+              <div className="h-72 flex flex-col items-center justify-center gap-5 bg-gradient-to-br from-primary/5 to-accent/5 p-6">
                 <div className="relative">
                   <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center">
                     <Video size={28} className="text-primary" />
                   </div>
                   <div className="absolute inset-0 rounded-2xl border-2 border-primary border-t-transparent animate-spin" />
                 </div>
-                <div className="text-center">
-                  <p className="text-foreground font-bold">Generating your video...</p>
-                  <p className="text-muted-foreground text-xs mt-1 truncate max-w-xs">
-                    "{video.prompt.length > 45 ? video.prompt.slice(0, 45) + "…" : video.prompt}"
+                <div className="text-center max-w-xs">
+                  <p className="text-foreground font-bold text-sm transition-all duration-500">
+                    {statusMsg || "Working on your video…"}
+                  </p>
+                  <p className="text-muted-foreground text-xs mt-1.5 italic opacity-80 truncate">
+                    "{video.prompt.length > 50 ? video.prompt.slice(0, 50) + "…" : video.prompt}"
+                  </p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">
+                    {PLATFORM_PRESETS[video.platform]?.icon} {PLATFORM_PRESETS[video.platform]?.label} · {video.aspectRatio} · {DURATION_LABELS[video.duration]?.split("·")[0].trim()}
                   </p>
                 </div>
                 {/* Animated progress bar */}
-                <div className="w-56 space-y-1.5">
+                <div className="w-60 space-y-1.5">
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Rendering {video.aspectRatio} · {video.duration}s</span>
+                    <span>Rendering…</span>
                     <span className="text-primary font-bold">{video.progress}%</span>
                   </div>
                   <div className="h-2 bg-secondary rounded-full overflow-hidden">
@@ -451,7 +456,7 @@ export function VideoGenerator() {
                 </div>
               </div>
             ) : video.error ? (
-              <div className="h-40 flex items-center justify-center text-destructive text-sm">{video.error}</div>
+              <div className="h-40 flex items-center justify-center gap-2 text-destructive text-sm px-6 text-center">{video.error}</div>
             ) : (
               <>
                 <video
