@@ -326,18 +326,20 @@ export function VideoGenerator() {
 
           <div>
             <p className="text-xs text-muted-foreground mb-2">Duration</p>
-            <div className="flex gap-2">
-              {([5, 10] as Duration[]).map(d => (
+            <div className="grid grid-cols-2 gap-2">
+              {([5, 10, 60, 300] as Duration[]).map(d => (
                 <button
                   key={d}
                   onClick={() => setDuration(d)}
                   className={cn(
-                    "flex-1 py-2 rounded-xl text-sm font-bold border transition-all",
+                    "py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left leading-tight",
                     duration === d
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-secondary/50 border-transparent text-muted-foreground hover:bg-secondary"
                   )}
-                >{d}s</button>
+                >
+                  {DURATION_LABELS[d]}
+                </button>
               ))}
             </div>
           </div>
