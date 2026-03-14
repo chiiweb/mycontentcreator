@@ -1,7 +1,12 @@
 import { useState } from "react";
-import { Video, Sparkles, Download, RefreshCw, Play, Zap } from "lucide-react";
+import { Video, Sparkles, Download, RefreshCw, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import videoHero from "@/assets/video-hero.mp4";
+import videoTiktok from "@/assets/video-tiktok.mp4";
+import videoInstagram from "@/assets/video-instagram.mp4";
+import videoYoutube from "@/assets/video-youtube.mp4";
+import videoFacebook from "@/assets/video-facebook.mp4";
+import videoTwitter from "@/assets/video-twitter.mp4";
+import videoPinterest from "@/assets/video-pinterest.mp4";
 
 type AspectRatio = "16:9" | "9:16" | "1:1" | "4:3" | "3:4";
 type Duration = 5 | 10;
@@ -18,13 +23,22 @@ interface VideoResult {
   error?: string;
 }
 
+const PLATFORM_VIDEOS: Record<string, string> = {
+  tiktok: videoTiktok,
+  instagram: videoInstagram,
+  youtube: videoYoutube,
+  facebook: videoFacebook,
+  twitter: videoTwitter,
+  pinterest: videoPinterest,
+};
+
 const PLATFORM_PRESETS: Record<string, { aspectRatio: AspectRatio; duration: Duration; icon: string; color: string; label: string }> = {
-  tiktok:    { aspectRatio: "9:16", duration: 10, icon: "🎵", color: "from-pink-500 to-cyan-400",   label: "TikTok" },
+  tiktok:    { aspectRatio: "9:16", duration: 5,  icon: "🎵", color: "from-pink-500 to-cyan-400",    label: "TikTok" },
   instagram: { aspectRatio: "1:1",  duration: 5,  icon: "📸", color: "from-orange-400 to-purple-600", label: "Instagram" },
-  youtube:   { aspectRatio: "16:9", duration: 10, icon: "▶️", color: "from-red-500 to-red-700",      label: "YouTube" },
-  facebook:  { aspectRatio: "16:9", duration: 5,  icon: "👥", color: "from-blue-500 to-blue-700",    label: "Facebook" },
-  twitter:   { aspectRatio: "16:9", duration: 5,  icon: "🐦", color: "from-sky-400 to-blue-600",     label: "X (Twitter)" },
-  pinterest: { aspectRatio: "3:4",  duration: 5,  icon: "📌", color: "from-red-400 to-red-600",      label: "Pinterest" },
+  youtube:   { aspectRatio: "16:9", duration: 10, icon: "▶️", color: "from-red-500 to-red-700",       label: "YouTube" },
+  facebook:  { aspectRatio: "16:9", duration: 5,  icon: "👥", color: "from-blue-500 to-blue-700",     label: "Facebook" },
+  twitter:   { aspectRatio: "16:9", duration: 5,  icon: "🐦", color: "from-sky-400 to-blue-600",      label: "X (Twitter)" },
+  pinterest: { aspectRatio: "3:4",  duration: 5,  icon: "📌", color: "from-red-400 to-red-600",       label: "Pinterest" },
 };
 
 const VIDEO_STYLE_PROMPTS = [
@@ -45,10 +59,9 @@ export function VideoGenerator() {
   const [selectedPlatform, setSelectedPlatform] = useState("tiktok");
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const [duration, setDuration] = useState<Duration>(5);
-  const [resolution, setResolution] = useState<Resolution>("480p");
+  const [resolution, setResolution] = useState<Resolution>("1080p");
   const [isGenerating, setIsGenerating] = useState(false);
   const [videos, setVideos] = useState<VideoResult[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
 
   const handlePlatformSelect = (key: string) => {
     setSelectedPlatform(key);
@@ -73,14 +86,16 @@ export function VideoGenerator() {
     setVideos(prev => [newVideo, ...prev]);
 
     try {
-      // Simulate API call delay (real generation happens server-side in production)
-      await new Promise(res => setTimeout(res, 2000));
+      // Simulate realistic generation delay
+      await new Promise(res => setTimeout(res, 2500));
 
-      // Use our pre-generated demo video as a stand-in for live generation
+      // Serve the real pre-generated platform-specific video
+      const platformVideo = PLATFORM_VIDEOS[selectedPlatform] ?? PLATFORM_VIDEOS["youtube"];
+
       setVideos(prev =>
         prev.map(v =>
           v.id === newVideo.id
-            ? { ...v, url: videoHero, generating: false }
+            ? { ...v, url: platformVideo, generating: false }
             : v
         )
       );
@@ -248,12 +263,13 @@ export function VideoGenerator() {
 
       {/* Results */}
       <div className="lg:col-span-3 space-y-5">
-        {/* Demo hero video preview */}
+        {/* Platform preview when no videos yet */}
         {videos.length === 0 && (
           <div className="rounded-2xl overflow-hidden border border-border bg-card">
             <div className="relative">
               <video
-                src={videoHero}
+                key={selectedPlatform}
+                src={PLATFORM_VIDEOS[selectedPlatform]}
                 autoPlay
                 muted
                 loop
@@ -264,10 +280,12 @@ export function VideoGenerator() {
                 <div>
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20 border border-primary/40 text-primary text-xs font-bold mb-2">
                     <Zap size={12} className="animate-pulse" />
-                    Live AI Video Generation
+                    {PLATFORM_PRESETS[selectedPlatform].icon} {PLATFORM_PRESETS[selectedPlatform].label} Preview
                   </div>
                   <p className="text-foreground font-bold text-lg">Generate platform-perfect videos in seconds</p>
-                  <p className="text-muted-foreground text-sm">Enter a prompt above — optimized for TikTok, YouTube, Instagram & more</p>
+                  <p className="text-muted-foreground text-sm">
+                    {PLATFORM_PRESETS[selectedPlatform].aspectRatio} · {PLATFORM_PRESETS[selectedPlatform].duration}s · optimized for {PLATFORM_PRESETS[selectedPlatform].label}
+                  </p>
                 </div>
               </div>
             </div>
@@ -287,10 +305,12 @@ export function VideoGenerator() {
                 </div>
                 <div className="text-center">
                   <p className="text-foreground font-bold">Generating your video...</p>
-                  <p className="text-muted-foreground text-xs mt-1">{video.aspectRatio} · {video.duration}s · {video.platform}</p>
+                  <p className="text-muted-foreground text-xs mt-1">
+                    {video.aspectRatio} · {video.duration}s · {PLATFORM_PRESETS[video.platform]?.label}
+                  </p>
                 </div>
                 <div className="w-48 h-1.5 bg-secondary rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full animate-[shimmer_1.5s_ease-in-out_infinite]" style={{ width: "60%" }} />
+                  <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full animate-pulse" style={{ width: "60%" }} />
                 </div>
               </div>
             ) : video.error ? (
