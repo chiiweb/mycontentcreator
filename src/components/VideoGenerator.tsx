@@ -23,7 +23,7 @@ import vidTech from "@/assets/vid-tech.mp4";
 import vidFashion from "@/assets/vid-fashion.mp4";
 
 type AspectRatio = "16:9" | "9:16" | "1:1" | "4:3" | "3:4";
-type Duration = 5 | 10;
+type Duration = 5 | 10 | 60 | 300;
 type Resolution = "480p" | "1080p";
 
 interface VideoResult {
