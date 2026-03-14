@@ -83,10 +83,45 @@ const PLATFORM_VIDEOS: Record<string, string> = {
 const PLATFORM_PRESETS: Record<string, { aspectRatio: AspectRatio; duration: Duration; icon: string; color: string; label: string }> = {
   tiktok:    { aspectRatio: "9:16", duration: 5,  icon: "🎵", color: "from-pink-500 to-cyan-400",    label: "TikTok" },
   instagram: { aspectRatio: "1:1",  duration: 5,  icon: "📸", color: "from-orange-400 to-purple-600", label: "Instagram" },
-  youtube:   { aspectRatio: "16:9", duration: 10, icon: "▶️", color: "from-red-500 to-red-700",       label: "YouTube" },
-  facebook:  { aspectRatio: "16:9", duration: 5,  icon: "👥", color: "from-blue-500 to-blue-700",     label: "Facebook" },
+  youtube:   { aspectRatio: "16:9", duration: 60, icon: "▶️", color: "from-red-500 to-red-700",       label: "YouTube" },
+  facebook:  { aspectRatio: "16:9", duration: 60, icon: "👥", color: "from-blue-500 to-blue-700",     label: "Facebook" },
   twitter:   { aspectRatio: "16:9", duration: 5,  icon: "🐦", color: "from-sky-400 to-blue-600",      label: "X (Twitter)" },
   pinterest: { aspectRatio: "3:4",  duration: 5,  icon: "📌", color: "from-red-400 to-red-600",       label: "Pinterest" },
+};
+
+const DURATION_LABELS: Record<number, string> = {
+  5:   "5s  · Reel / Short",
+  10:  "10s · Story",
+  60:  "1m  · Explainer",
+  300: "5m  · Deep-dive",
+};
+
+// Humanized status messages that cycle while generating
+const GENERATING_MESSAGES: Record<number, string[]> = {
+  5: [
+    "Alright, pulling together your concept...",
+    "Picking the perfect visuals for this...",
+    "Almost there, just adding the finishing touches!",
+  ],
+  10: [
+    "Got it! Working on your 10-second clip...",
+    "Stitching the scenes together now...",
+    "Looking good — almost ready for you!",
+  ],
+  60: [
+    "Nice — a full minute takes a little love, hang tight...",
+    "Building your story scene by scene...",
+    "Colour grading and syncing audio now...",
+    "This one's coming out great — nearly done!",
+  ],
+  300: [
+    "A 5-minute deep-dive — this is going to be awesome!",
+    "Laying out the structure and pacing...",
+    "Rendering each segment, this takes a moment...",
+    "Halfway through — the second half always flies by!",
+    "Adding transitions and polishing the flow...",
+    "Just the final review pass left — almost there!",
+  ],
 };
 
 const VIDEO_STYLE_PROMPTS = [
